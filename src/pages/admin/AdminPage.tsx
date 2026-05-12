@@ -95,9 +95,12 @@ export const AdminPage: React.FC = () => {
              <Smartphone size={18} />
              <span>打开小程序录入端</span>
            </Link>
-           <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-             系统设置
-           </button>
+           <Link
+             to="/admin/users-demo"
+             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+           >
+             用户设置
+           </Link>
         </div>
       </nav>
 
