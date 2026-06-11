@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { PlusCircle, List, LayoutDashboard } from 'lucide-react';
+import { PlusCircle, List } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export const MobileLayout: React.FC = () => {
@@ -12,11 +12,13 @@ export const MobileLayout: React.FC = () => {
       <div className="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative">
         
         {/* Header (Optional, maybe just title) */}
-        <header className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-md">
+        <header className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-md flex justify-between items-center">
+          <div className="w-8"></div> {/* Spacer for centering */}
           <h1 className="text-lg font-bold text-center">
             {location.pathname === '/' ? '房源录入' : 
              location.pathname === '/list' ? '我的看房' : '看房助手'}
           </h1>
+          <div className="w-8"></div>
         </header>
 
         {/* Content Area */}
@@ -46,15 +48,6 @@ export const MobileLayout: React.FC = () => {
           >
             <List size={24} />
             <span className="text-xs mt-1">列表</span>
-          </NavLink>
-
-          <NavLink 
-            to="/admin" 
-            className="flex flex-col items-center p-2 rounded-lg text-gray-400 hover:text-gray-600"
-            title="Go to Admin Dashboard"
-          >
-            <LayoutDashboard size={24} />
-            <span className="text-xs mt-1">后台</span>
           </NavLink>
         </nav>
       </div>
