@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePropertyStore, Facility } from '../../store/propertyStore';
+import { uploadPropertyImages } from '../../lib/cosUpload';
 import { clsx } from 'clsx';
 import { Save, Plus, Trash2, Camera, MapPin, Train, Stethoscope, GraduationCap, ShoppingBag } from 'lucide-react';
 
@@ -32,6 +33,11 @@ const MOCK_PLATES: Record<string, string[]> = {
 
 const DECORATION_OPTIONS = ['毛坯', '简装', '精装', '豪装'];
 
+type DecorationImage = {
+  previewUrl: string;
+  file: File;
+};
+
 const FACILITY_TYPES = [
   { type: 'subway', label: '地铁', icon: Train, placeholder: '几号线', unit: '米' },
   { type: 'medical', label: '医疗', icon: Stethoscope, placeholder: '医院名称', unit: '米' },
@@ -55,7 +61,7 @@ export const EntryPage: React.FC = () => {
     decoration: '精装' as const,
   });
 
-  const [decorationImages, setDecorationImages] = useState<string[]>([]);
+  const [decorationImages, setDecorationImages] = useState<DecorationImage[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
 
   // Computed Unit Price & Rental Yield
@@ -82,15 +88,23 @@ export const EntryPage: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDecorationImages([...decorationImages, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
+      setDecorationImages([
+        ...decorationImages,
+        {
+          previewUrl: URL.createObjectURL(file),
+          file,
+        },
+      ]);
+      e.target.value = '';
     }
   };
 
   const removeImage = (index: number) => {
+    const image = decorationImages[index];
+    if (image) {
+      URL.revokeObjectURL(image.previewUrl);
+    }
+
     setDecorationImages(decorationImages.filter((_, i) => i !== index));
   };
 
@@ -131,6 +145,8 @@ export const EntryPage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      const uploadedImageUrls = await uploadPropertyImages(decorationImages.map((image) => image.file));
+
       // Need to await the async action
       await addProperty({
         administrativeDistrict: formData.administrativeDistrict,
@@ -142,7 +158,7 @@ export const EntryPage: React.FC = () => {
         totalPrice: Number(formData.totalPrice),
         estimatedRent: Number(formData.estimatedRent),
         decoration: formData.decoration as any,
-        decorationImages,
+        decorationImages: uploadedImageUrls,
         facilities,
       });
       navigate('/list');
@@ -289,7 +305,7 @@ export const EntryPage: React.FC = () => {
              <div className="grid grid-cols-4 gap-2">
                 {decorationImages.map((img, idx) => (
                   <div key={idx} className="relative aspect-square rounded-lg overflow-hidden group">
-                    <img src={img} alt="decoration" className="w-full h-full object-cover" />
+                    <img src={img.previewUrl} alt="decoration" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => removeImage(idx)} className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl">
                       <Trash2 size={12} />
                     </button>
@@ -298,7 +314,7 @@ export const EntryPage: React.FC = () => {
                 <label className="aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-colors">
                   <Camera size={24} />
                   <span className="text-[10px] mt-1">添加照片</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
                 </label>
              </div>
           </div>
